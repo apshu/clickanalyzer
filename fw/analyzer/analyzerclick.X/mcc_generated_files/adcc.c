@@ -126,13 +126,13 @@ void ADCC_StartConversion(adcc_channel_t channel)
 bool ADCC_IsConversionDone()
 {
     // Start the conversion
-    return (!ADCON0bits.ADGO);
+    return (bool)(!ADCON0bits.ADGO);
 }
 
 adc_result_t ADCC_GetConversionResult(void)
 {
     // Return the result
-    return ((ADRESH << 8) + ADRESL);
+    return (adc_result_t)((ADRESH << 8) + ADRESL);
 }
 
 adc_result_t ADCC_GetSingleConversion(adcc_channel_t channel)
@@ -155,7 +155,7 @@ adc_result_t ADCC_GetSingleConversion(adcc_channel_t channel)
     }
 
     // Conversion finished, return the result
-    return ((ADRESH << 8) + ADRESL);
+    return (adc_result_t)((ADRESH << 8) + ADRESL);
 }
 
 void ADCC_StopConversion(void)
@@ -211,7 +211,7 @@ void ADCC_ClearAccumulator(void)
 int32_t ADCC_GetAccumulatorValue(void)
 {
     //Return the contents of ADACCU, ADACCH and ADACCL registers
-    return (((unsigned long)ADACCU << 16)+(ADACCH << 8) + ADACCL);
+    return (((long)ADACCU << 16U)+(ADACCH << 8U) + ADACCL);
 }
 
 bool ADCC_HasAccumulatorOverflowed(void)
@@ -223,13 +223,13 @@ bool ADCC_HasAccumulatorOverflowed(void)
 uint16_t ADCC_GetFilterValue(void)
 {
     //Return the contents of ADFLTRH and ADFLTRL registers
-    return ((ADFLTRH << 8) + ADFLTRL);
+    return (uint16_t)((ADFLTRH << 8) + ADFLTRL);
 }
 
 uint16_t ADCC_GetPreviousResult(void)
 {
     //Return the contents of ADPREVH and ADPREVL registers
-    return ((ADPREVH << 8) + ADPREVL);
+    return (uint16_t)((ADPREVH << 8) + ADPREVL);
 }
 
 void ADCC_DefineSetPoint(uint16_t setPoint)
@@ -256,7 +256,7 @@ void ADCC_SetLowerThreshold(uint16_t lowerThreshold)
 uint16_t ADCC_GetErrorCalculation(void)
 {
 	//Return the contents of ADERRH and ADERRL registers
-	return ((ADERRH << 8) + ADERRL);
+	return (uint16_t)((ADERRH << 8) + ADERRL);
 }
 
 void ADCC_EnableDoubleSampling(void)

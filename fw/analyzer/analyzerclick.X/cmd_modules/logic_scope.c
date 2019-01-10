@@ -54,7 +54,7 @@ static uint8_t LS_populatePinmap(uint8_t *thePinmap) {
         for (i = 1; i <= (sizeof (LS_samplingBuf->pinmapInfo.pinmap) / sizeof (LS_samplingBuf->pinmapInfo.pinmap[0])); ++i) {
             PINS_pindef_t* pindef = PINS_pinnumToPinDef(i);
             if (GLOBAL_getOutputMode() == GLOBAL_output_mode_binary) {
-                *thePinmap++ = PINS_pinToLinearBitnumber(pindef) - 8; /* -8 : we start streaming from PORTB */
+                *thePinmap++ = (unsigned)(PINS_pinToLinearBitnumber(pindef) - 8); /* -8 : we start streaming from PORTB */
             } else {
                 /* Pinmap is comma separated list of strings */
                 sprintf(thePinmap, "%s%u", (i == 1) ? "" : ",", 1 << (PINS_pinToLinearBitnumber(pindef) - 8));
@@ -145,7 +145,7 @@ static void LS_task(void) {
                     LS_outputBuf = LS_outputBuf + strlen(LS_outputBuf);
                     LS_numBuffersToSend = LS_numSamples;
                 } else {
-                    sprintf(LS_outputBuf, "%u", LS_samplingBuf->dataRecords[LS_numSamples - LS_numBuffersToSend]);
+                    sprintf(LS_outputBuf, "%u", LS_samplingBuf->dataRecords[(unsigned)(LS_numSamples - LS_numBuffersToSend)]);
                     LS_outputBuf = LS_outputBuf + strlen(LS_outputBuf);
                     if (--LS_numBuffersToSend) {
                         *LS_outputBuf++ = ',';
@@ -167,7 +167,7 @@ static void LS_task(void) {
                     /* First run */
                     *LS_outputBuf = 0; /* Buffer used for text, make sure it's empty... */
                     LS_outputBuf = XTERM_strinsert_spinner(LS_outputBuf);
-                    LS_outputBuf = XTERM_strinsert_clientWindowPreamble(LS_outputBuf, LS_firstAcquisition);
+                    LS_outputBuf = XTERM_strinsert_clientWindowPreamble(LS_outputBuf, (bool)LS_firstAcquisition);
                     float tmrFrequency = TMRxToHz(LS_NCOID | TMRHELPER_TMRIS_NCO, (float) _XTAL_FREQ);
                     char tmpBuf1[30];
                     char tmpBuf2[30];
@@ -177,16 +177,12 @@ static void LS_task(void) {
                 LS_outputBuf += strlen(LS_outputBuf);
                 uint8_t pinNum = PINS_getNumPins() - LS_numBuffersToSend + 1;
                 PINS_pindef_t* thePin = PINS_pinnumToPinDef(pinNum);
-#if  defined(CIRCUITBOARD) && (CIRCUITBOARD > 0) && ((CIRCUITBOARD == PCB_gumstick) || (CIRCUITBOARD == PCB_gumstick_alt_UART))
-                sprintf(LS_outputBuf, ANSI_CSI "%d;1H" ANSI_SETCOLOR("30;1") "Digital pin %d (R%c%d)\r\n" ANSI_SETCOLOR("36"), ((pinNum - 1) << 1) + XTERM_LS_firstRow, pinNum, thePin->portName, thePin->portBit);
-#else
                 sprintf(LS_outputBuf, ANSI_CSI "%d;1H" ANSI_SETCOLOR("30;1") "Pin %d\r\n" ANSI_SETCOLOR("36"), ((pinNum - 1) << 1) + XTERM_LS_firstRow, pinNum);
-#endif
                 uint8_t smpId;
-                uint16_t pinMask = 1 << (PINS_pinToLinearBitnumber(thePin) - 8);
+                uint16_t pinMask = (unsigned)(1 << (PINS_pinToLinearBitnumber(thePin) - 8));
                 LS_outputBuf = LS_outputBuf + strlen(LS_outputBuf);
                 for (smpId = 0; smpId < LS_numSamples; ++smpId) {
-                    *LS_outputBuf++ = (LS_samplingBuf->dataRecords[smpId] & pinMask) ? '-' : 'H';
+                    *LS_outputBuf++ = (LS_samplingBuf->dataRecords[smpId] & pinMask) ? 'H' : '-';
                 }
                 *LS_outputBuf = 0;
                 if (!--LS_numBuffersToSend || (strlen(CMD_getOutputBufferAddress()) > (CMD_getOutputBufferSize() - 200))) {
@@ -270,7 +266,7 @@ bool LS_onCommand(const char* cmdLine) {
         for (paramId = 1; (status & paraccept) && CMD_getParam(cmdLine, paramId, parName, &parValue) && (paramId <= LS_maxNumParameters); ++paramId) {
             if (!strcmp(parName, "FREQ")) {
                 if ((parValue >= 61) && (parValue <= 4000000L)) {
-                    LS_NCOreg(NCO, INC) = ((long double) parValue * 1048576.0) / (1.0 * _XTAL_FREQ);
+                    LS_NCOreg(NCO, INC) = (volatile unsigned short long)(((long double) parValue * 1048576.0) / (1.0 * _XTAL_FREQ));
                     if (!LS_NCOreg(NCO, INC)) {
                         LS_NCOreg(NCO, INC) = 1;
                     }
@@ -280,7 +276,7 @@ bool LS_onCommand(const char* cmdLine) {
             }
             if (!strcmp(parName, "NUMSMP")) {
                 if ((parValue > 0) && (parValue <= LS_getMaxNumberOfSamples())) {
-                    LS_numSamples = parValue;
+                    LS_numSamples = (unsigned)parValue;
                     status |= par4;
                     continue;
                 }

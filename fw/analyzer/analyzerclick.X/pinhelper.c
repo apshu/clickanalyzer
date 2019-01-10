@@ -5,29 +5,12 @@
 #include "pinhelper.h"
 #include "hwresources.h"
 
-#define PORTPINDEF(port,bit) { port##PORT, _PORT##port##_R##port##bit##_POSITION }
+#define PORTPINDEF(port,bit) { port##PORT, _PORT##port##_R##port##bit##_POSITION, false }
 #define APORT 'A'
 #define BPORT 'B'
 #define CPORT 'C'
 
 static PINS_pindef_t PINS_pinlist[] = {
-#if defined( CIRCUITBOARD ) && ( CIRCUITBOARD > 0 )
-#if (CIRCUITBOARD == PCB_gumstick_alt_UART) || (CIRCUITBOARD == PCB_gumstick)
-    PORTPINDEF(B, 0),
-    PORTPINDEF(B, 1),
-    PORTPINDEF(B, 2),
-    PORTPINDEF(B, 3),
-    PORTPINDEF(B, 6),
-    PORTPINDEF(B, 7),
-    PORTPINDEF(C, 0),
-    PORTPINDEF(C, 1),
-    PORTPINDEF(C, 2),
-    PORTPINDEF(C, 3),
-    PORTPINDEF(C, 4),
-    PORTPINDEF(C, 5),
-    PORTPINDEF(C, 6),
-    PORTPINDEF(C, 7),
-#elif (CIRCUITBOARD == PCB_clickboard)
     PORTPINDEF(C, 1), // MB1
     PORTPINDEF(B, 6), // MB2
     PORTPINDEF(B, 7), // MB3
@@ -42,12 +25,6 @@ static PINS_pindef_t PINS_pinlist[] = {
     PORTPINDEF(B, 0), // MB10
     PORTPINDEF(C, 4), // MB11
     PORTPINDEF(B, 3), // MB12
-#else
-#error "Unknown board type"
-#endif
-#else
-#error "Please define circuit board type and/or include hwresources.h"
-#endif
 };
 
 PINS_pindef_t* PINS_pinnumToPinDef(uint8_t pinId) {
@@ -63,7 +40,7 @@ uint8_t PINS_pinDefToPinNum(PINS_pindef_t* thePin) { /* 0 for error */
         uint8_t i;
         for (i = 0; i<sizeof (PINS_pinlist) / sizeof (PINS_pinlist[0]); ++i) {
             if ((PINS_pinlist[i].portBit == thePin->portBit) && (PINS_pinlist[i].portName == thePin->portName)) {
-                return (i + 1);
+                return (i + 1U);
             }
         }
     }
@@ -78,24 +55,24 @@ static struct {
 
 void PINS_fetchDigitalInputChanges(void) {
     PINS_pinChangesCache.chgA = IOCAF;
-    IOCAF &= ~PINS_pinChangesCache.chgA;
+    IOCAF &= (uint8_t) ~PINS_pinChangesCache.chgA;
     PINS_pinChangesCache.chgB = IOCBF;
-    IOCBF &= ~PINS_pinChangesCache.chgB;
+    IOCBF &= (uint8_t) ~PINS_pinChangesCache.chgB;
     PINS_pinChangesCache.chgC = IOCCF;
-    IOCCF &= ~PINS_pinChangesCache.chgC;
+    IOCCF &= (uint8_t) ~PINS_pinChangesCache.chgC;
 }
 
 bool PINS_isDigitalInputChanged(PINS_pindef_t *thePin) {
     if (thePin) {
-        uint8_t thePinMask = 1 << thePin->portBit;
+        uint8_t thePinMask = 1U << thePin->portBit;
         if (thePin->portName == 'A') {
-            return PINS_pinChangesCache.chgA & thePinMask;
+            return (bool) (PINS_pinChangesCache.chgA & thePinMask);
         }
         if (thePin->portName == 'B') {
-            return PINS_pinChangesCache.chgB & thePinMask;
+            return (bool) (PINS_pinChangesCache.chgB & thePinMask);
         }
         if (thePin->portName == 'C') {
-            return PINS_pinChangesCache.chgC & thePinMask;
+            return (bool) (PINS_pinChangesCache.chgC & thePinMask);
         }
     }
     return false;
@@ -130,44 +107,45 @@ uint8_t PINS_pinToLinearBitnumber(PINS_pindef_t *thePin) { /* A0 = 0, A7=7, B0 =
 
 void PINS_setPinModeAnalog(PINS_pindef_t *thePin, bool isAnalog) {
     if (thePin) {
-#if (CIRCUITBOARD == PCB_gumstick_alt_UART)
-        if ((thePin->portName == 'B') && isAnalog) {
-            if ((thePin->portBit == 4) || (thePin->portBit == 5)) {
-                return; // Ignore analog mode for RB4 & RB5 in alt uart mode
-            }
-        }
-#endif
-        uint8_t thePinMask = 1 << thePin->portBit;
+        uint8_t thePinMask = 1U << thePin->portBit;
+        thePin->isAnalog = isAnalog;
         switch (thePin->portName) {
             case 'A':
                 if (isAnalog) {
                     ANSELA |= thePinMask;
                 } else {
-                    ANSELA &= ~thePinMask;
+                    ANSELA &= (uint8_t) ~thePinMask;
                 }
                 break;
             case 'B':
                 if (isAnalog) {
                     ANSELB |= thePinMask;
                 } else {
-                    ANSELB &= ~thePinMask;
+                    ANSELB &= (uint8_t) ~thePinMask;
                 }
                 break;
             case 'C':
                 if (isAnalog) {
                     ANSELC |= thePinMask;
                 } else {
-                    ANSELC &= ~thePinMask;
+                    ANSELC &= (uint8_t) ~thePinMask;
                 }
                 break;
         }
     }
 }
 
+bool PINS_isPinAnalog(PINS_pindef_t *thePin) {
+    if (thePin) {
+        return thePin->isAnalog;
+    }
+    return false;
+}
+
 bool PINS_pinToADC(PINS_pindef_t *thePin) {
     PINS_setPinModeAnalog(thePin, true);
     ADPCH = PINS_pinToLinearBitnumber(thePin);
-    return (ADPCH != 0x3B);
+    return (bool) (ADPCH != 0x3B);
 }
 
 float PINS_measureVref(void) {
@@ -178,3 +156,11 @@ float PINS_measureVref(void) {
     }
     return ((2.048 * 4095.0 * avg) / refmeas);
 }
+
+void PINS_setAllPinsAnalog(bool isAnalog) {
+    int thePinNum = PINS_getNumPins();
+    for (; thePinNum; --thePinNum) {
+        PINS_setPinModeAnalog(PINS_pinnumToPinDef((unsigned) thePinNum), isAnalog);
+    }
+}
+

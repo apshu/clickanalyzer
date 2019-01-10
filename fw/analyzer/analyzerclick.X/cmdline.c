@@ -254,7 +254,7 @@ void CMD_taskIn(void) {
                         ++s;
                     }
                 }
-                CMD_inBuf[inLen + 1] = 0; /* Add string list terminator */
+                CMD_inBuf[inLen + 1U] = 0; /* Add string list terminator */
                 CMD_stateIn = CMD_i_startNewCommand;
             }
             break;
@@ -290,20 +290,7 @@ void CMD_taskOut(void) {
         case CMD_o_greeting:
             if (CMD_stateIn != CMD_i_init) {
                 /* Wait until init completes */
-#if defined( CIRCUITBOARD ) && ( CIRCUITBOARD > 0 )
-#if (CIRCUITBOARD == PCB_gumstick_alt_UART) || (CIRCUITBOARD == PCB_clickboard)
                 strcpy(CMD_outBuffer.payload, "{\"commandline\":{\"separator_commands\":\"$\"}}\033[5n"); /* Greeting + Terminal client autodetect */
-#elif (CIRCUITBOARD == PCB_gumstick)
-                strcpy(CMD_outBuffer.payload, "{\"commandline\":{\"separator_commands\":\"$\"}}"); /* Greeting */
-                static const char XTERM_command_startXTERMmode[] = {'S', 'E', 'T', CMD_char_SEPARATOR, 'O', 'U', 'T', 'P', 'U', 'T', CMD_char_SEPARATOR, 'X', 'T', 'E', 'R', 'M', 0};
-                CMD_startSingleCommand(XTERM_command_startXTERMmode, CMD_char_EOS);
-                CMD_stateIn = CMD_i_waitChar;
-#else
-#error "Unknown board type"
-#endif
-#else
-#error "Please define circuit board type and/or include hwresources.h"
-#endif                      
                 *strchr(CMD_outBuffer.payload, '$') = CMD_char_EOS;
                 CMD_setNumPayloadBytes(strlen(CMD_outBuffer.payload));
                 CMD_stateOut = CMD_o_textBufSend;

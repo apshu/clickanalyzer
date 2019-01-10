@@ -63,7 +63,7 @@ void PIN_MANAGER_Initialize(void) {
     /**
     TRISx registers
      */
-    TRISA = 0xE5;
+    TRISA = 0x85;
     TRISC = 0xFF;
 
     /**
@@ -77,7 +77,7 @@ void PIN_MANAGER_Initialize(void) {
     WPUx registers
      */
     WPUE = 0x08;
-    WPUA = 0xE0;
+    WPUA = 0x87;
     WPUC = 0x00;
 
     /**
@@ -94,22 +94,18 @@ void PIN_MANAGER_Initialize(void) {
     IOCBF = IOCCF = 0;
     IOCBN = IOCBP = IOCCN = IOCCP = 0xFF;
 
-    bool state = GIE;
+    bool state = (bool)GIE;
     GIE = 0;
     PPSLOCK = 0x55;
     PPSLOCK = 0xAA;
     PPSLOCKbits.PPSLOCKED = 0x00; // unlock PPS
 
+    RA3PPS = RA5PPS = RA4PPS = RA6PPS = 0;   //RA3->LATA3; RA4->LATA4; RA5-LATA5; RA6->LATA6;  
     T2INPPSbits.T2INPPS = 0x04; //RA4->TMR2:T2IN;
 #if defined( CIRCUITBOARD ) && ( CIRCUITBOARD > 0 )
-#if (CIRCUITBOARD == PCB_gumstick)
-    TRISB = 0xBF;
-    WPUB = 0x40;
-    U1RXPPSbits.U1RXPPS = 0x0F; //RB7->UART1:RX1;
-    RB6PPS = 0x13; //RB6->UART1:TX1;
-#elif (CIRCUITBOARD == PCB_gumstick_alt_UART) || (CIRCUITBOARD == PCB_clickboard)
+#if (CIRCUITBOARD == PCB_clickboard)
     TRISB = 0xFF;
-    WPUB = 0x30;
+    WPUB = 0x10;
     U1RXPPSbits.U1RXPPS = 0x0C;   //RB4->UART1:RX1;
     U1CTSPPSbits.U1CTSPPS = 0x0D;   //RB5->UART1:CTS1;
     T2INPPSbits.T2INPPS = 0x07;   //RA7->TMR2:T2IN;

@@ -13,8 +13,6 @@ extern "C" {
 #endif
     
 #define PCB_clickboard 1
-#define PCB_gumstick 2
-#define PCB_gumstick_alt_UART 3
     
 #if (CIRCUITBOARD <= 0) || (CIRCUITBOARD > 3)
 #undef CIRCUITBOARD
@@ -36,6 +34,10 @@ extern "C" {
 #define LS_NCOID 1
 #define LS_DMAID 1
     
+    /* Analog scope */
+#define SCOPE_NCOID 1
+#define SCOPE_DMAID 1
+    
     /* Reset all */
 #define RST_TMRID 2    /* This is the commchip haerthbeat watching timer */
     
@@ -49,9 +51,17 @@ extern "C" {
 #define _LS_NCOreg(tmrid, pre, post) __LS_NCOreg(tmrid, pre, post)
 #define LS_NCOreg(pre, post) _LS_NCOreg(LS_NCOID, pre, post)
 
+#define __SCOPE_NCOreg(tmrid, pre, post) pre##tmrid##post
+#define _SCOPE_NCOreg(tmrid, pre, post) __SCOPE_NCOreg(tmrid, pre, post)
+#define SCOPE_NCOreg(pre, post) _SCOPE_NCOreg(SCOPE_NCOID, pre, post)
+
 #define __LS_DMAreg(uartid, pre, post) pre##uartid##post
 #define _LS_DMAreg(uartid, pre, post) __LS_DMAreg(uartid, pre, post)
 #define LS_DMAreg(pre, post) _LS_DMAreg(LS_DMAID, pre, post)
+    
+#define __SCOPE_DMAreg(uartid, pre, post) pre##uartid##post
+#define _SCOPE_DMAreg(uartid, pre, post) __SCOPE_DMAreg(uartid, pre, post)
+#define SCOPE_DMAreg(pre, post) _SCOPE_DMAreg(SCOPE_DMAID, pre, post)
     
 #define __CMD_UARTreg(uartid, pre, post) pre##uartid##post
 #define _CMD_UARTreg(uartid, pre, post) __CMD_UARTreg(uartid, pre, post)

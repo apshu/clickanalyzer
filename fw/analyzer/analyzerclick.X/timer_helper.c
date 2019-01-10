@@ -4,15 +4,15 @@
 #include "timer_helper.h"
 
 static inline uint8_t TevenCKPStoDIV(uint8_t CKPSval) {
-    return (1 << CKPSval);
+    return (1U << CKPSval);
 }
 
 static inline uint8_t TevenOUTPStoDIV(uint8_t OUTPSval) {
-    return (OUTPSval + 1);
+    return (OUTPSval + 1U);
 }
 
 static inline uint16_t TevenPRtoDIV(uint8_t PRval) {
-    return (PRval + 1);
+    return (PRval + 1U);
 }
 
 typedef struct {

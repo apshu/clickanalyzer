@@ -26,7 +26,7 @@ void MOUSE_addEvent(uint16_t x, uint16_t y, uint16_t eventCode) {
     MOUSE_eventQue[MOUSE_eventQueWrPtr].mx = x;
     MOUSE_eventQue[MOUSE_eventQueWrPtr].my = y;
     MOUSE_eventQue[MOUSE_eventQueWrPtr].evt = eventCode;
-    uint8_t nextQuePtr = (MOUSE_eventQueWrPtr + 1) % (sizeof (MOUSE_eventQue) / sizeof (MOUSE_eventQue[0]));
+    uint8_t nextQuePtr = (MOUSE_eventQueWrPtr + 1U) % (sizeof (MOUSE_eventQue) / sizeof (MOUSE_eventQue[0]));
     if (nextQuePtr != MOUSE_eventQueRdPtr) {
         /* No FIFO queue overrun happens */
         MOUSE_eventQueWrPtr = nextQuePtr;
@@ -36,7 +36,7 @@ void MOUSE_addEvent(uint16_t x, uint16_t y, uint16_t eventCode) {
 static void MOUSE_sendEvent(uint16_t mx, uint16_t my, uint16_t eventCode) {
     uint8_t i = sizeof (MOUSE_eventHandlers) / sizeof (MOUSE_eventHandlers[0]);
     for (; i > 0; --i) {
-        MOUSE_eventHandlers[i - 1](mx, my, eventCode);
+        MOUSE_eventHandlers[i - 1U](mx, my, eventCode);
     }
 }
 

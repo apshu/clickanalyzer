@@ -12,7 +12,7 @@ static GLOBAL_acq_mode_t GLOBAL_mode_acq;
 static GLOBAL_output_mode_t GLOBAL_output_mode = GLOBAL_output_mode_JSON;
 static uint8_t* GLOBAL_samplingBufferPtr;
 static uint16_t GLOBAL_samplingBufferNumBytes = 0;
-static uint8_t GLOBAL_smallSamplingBuffer[215];
+static uint8_t GLOBAL_smallSamplingBuffer[220];
 static bit GLOBAL_isStopCommandRequest;
 
 GLOBAL_acq_mode_t inline GLOBAL_getAcquisitionMode() {

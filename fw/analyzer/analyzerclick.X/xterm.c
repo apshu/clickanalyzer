@@ -12,16 +12,23 @@
 #include "mouse.h"
 #include "cmd_modules/signal_show.h"
 
+#pragma warning push
+#pragma warning disable 336   /* Suppress string concatenation across lines */
+#pragma warning disable 228   /* Suppress illegal character warning */
 static const char XTERM_static_frame[] =
         ANSI_CSI "?25l" /* Hide cursor */
         ANSI_CSI "H" /* Home */
         ANSI_CSI "?7l" /* Disable line wrapping */
 #include "static_frame.ansi.inc.h"
         ;
+#pragma warning pop
 
+#pragma warning push
+#pragma warning disable 228   /* Suppress illegal character warning */
 static const char XTERM_dynamic_frame_template[] =
 #include "dynamic_frame_template.ansi.inc.h"
         ;
+#pragma warning pop
 
 const inline char* XTERM_getStaticFrame(void) {
     return XTERM_static_frame;
@@ -38,11 +45,14 @@ static inline bit XTERM_isShowNAKneeded(void) {
 }
 
 static char* XTERM_strcat_showCommandLine(char* renderBuf, const char* cmdLine) {
+#pragma warning push
+#pragma warning disable 336   /* Suppress string concatenation across lines */
     strcat(renderBuf,
             ANSI_SETCURSOR(XTERM_promptLeft, XTERM_promptRow) /* Move cursor (7,2) */
             ANSI_SETCOLOR("37;40") /* White on black background */
             ANSI_CSI ___mkstr(XTERM_maxPromptLength)"X" /* Erase characters */
             );
+#pragma warning pop
     if (strlen(cmdLine) >= (XTERM_maxPromptLength)) {
         /* Show "more characters are there" sign */
         strcat(renderBuf, "\256");
@@ -54,15 +64,24 @@ static char* XTERM_strcat_showCommandLine(char* renderBuf, const char* cmdLine) 
 }
 
 static char* XTERM_strcat_displayNAK(char* renderBuf) {
+#pragma warning push
+#pragma warning disable 336   /* Suppress string concatenation across lines */
     return strcat(renderBuf,
             ANSI_SETCURSOR(XTERM_NAKleft, XTERM_NAKrow) /* Move cursor (67,3) */
             ANSI_SETCOLOR("37;41") /* White on red background */
             " CMD ERROR ");
+#pragma warning pop
 }
 
 static char* XTERM_strcpy_LEDassignment(char* renderBuf, uint8_t pinId) {
-    if (pinId && (pinId < 100)) {
+    if (pinId) {
+        if (pinId == SSHOW_pinIsAnalog) {
+            strcpy(renderBuf, "AD");
+        } else {
+            if (pinId < 100) {
         sprintf(renderBuf, "%2d", pinId);
+            }
+        }
     } else {
         strcpy(renderBuf, "xx");
     }
@@ -111,38 +130,27 @@ char* XTERM_strinsert_clientScrollingWindowPreamble(char* renderBuf, bool clearS
 
 char* XTERM_strcat_enterXTERMmode(char* renderBuf) {
     XTERM_showNAK(false);
+#pragma warning push
+#pragma warning disable 336   /* Suppress string concatenation across lines */
     strcat(renderBuf, "\033c" /* reset terminal */
-#if defined( CIRCUITBOARD ) && ( CIRCUITBOARD > 0 )
-#if (CIRCUITBOARD == PCB_gumstick)
-            ANSI_OSC "?Analyzer Click - running on gumstick" ANSI_ST /* Set window title */
-#elif (CIRCUITBOARD == PCB_clickboard)
-            ANSI_OSC "?PIC18F26K42 click'o'lyzer" ANSI_ST /* Set window title */
+            ANSI_OSC "?PIC18F26K42 Click Analyzer" ANSI_ST /* Set window title */
             ANSI_CSI "?1000h" /* Enable mouse event reporting */
             ANSI_CSI "?1006h" /* Enable extended mouse reporting */
-#elif (CIRCUITBOARD == PCB_gumstick_alt_UART)
-            ANSI_OSC "?Analyzer Click - running on gumstick with alternate UART" ANSI_ST /* Set window title */
-            ANSI_CSI "?1000h" /* Enable mouse event reporting */
-            ANSI_CSI "?1006h" /* Enable extended mouse reporting */
-#else
-#error "Unknown board type"
-#endif
-#else
-#error "Please define circuit board type and/or include hwresources.h"
-#endif
             ANSI_CSI "8;" ___mkstr(XTERM_screenHeight)";" ___mkstr(XTERM_screenWidth)"t" /* Set window size in characters */
             ANSI_CSI "?25l" /* Hide cursor */
             ANSI_CSI ___mkstr(XTERM_userWindowTopRow)";" ___mkstr(XTERM_userWindowBottomRow)"r" /* Define scrolling region */
             );
+#pragma warning pop
     return renderBuf;
 }
 
 static void XTERM_addMouseEvent(const char* ANSIcode, bool isButtonPressed) {
-    long mx, my, evt;
-    evt = strtol(ANSIcode, &ANSIcode, 10);
+    unsigned long mx, my, evt;
+    evt = strtoul(ANSIcode, (char**) &ANSIcode, 10);
     ++ANSIcode;
-    mx = strtol(ANSIcode, &ANSIcode, 10);
+    mx = strtoul(ANSIcode, (char**) &ANSIcode, 10);
     ++ANSIcode;
-    my = strtol(ANSIcode, NULL, 10);
+    my = strtoul(ANSIcode, NULL, 10);
     if (!isButtonPressed) {
         evt += MOUSE_EVT_release;
     }
@@ -169,7 +177,7 @@ bool XTERM_executeANSIsequence(const char* ANSIcode) {
 
             case 'M': /* Mouse button pressed */
             case 'm': /* Mouse button released */
-                XTERM_addMouseEvent(ANSIcode + 1, ANSIlastChar == 'M');
+                XTERM_addMouseEvent(ANSIcode + 1, (bool) (ANSIlastChar == 'M'));
                 break;
 
             default:
@@ -185,9 +193,7 @@ void inline XTERM_showNAK(bool isShowNAK) {
 
 char* XTERM_strinsert_spinner(char* renderBuf) {
     static uint8_t LS_spinnerAnimPos;
-//    static const char LS_spinnerAnimChars[] = {46, 111, 79, 248, 79, 111}; //better bouncing ball
-    static const char LS_spinnerAnimChars[] = {180, 217, 193, 192, 195, 218, 194, 191}; //Rotating boxdrawing
-//    static const char LS_spinnerAnimChars[] = ".oOo"; //Bouncing ball
+    static const char LS_spinnerAnimChars[] = {180, 217, 193, 192, 195, 218, 194, 191};
     strcat(renderBuf, ANSI_SETCURSOR(XTERM_spinnerLeft, XTERM_spinnerTop) ANSI_SETCOLOR("0;1;44;36"));
     renderBuf = renderBuf + strlen(renderBuf);
     LS_spinnerAnimPos %= sizeof(LS_spinnerAnimChars);

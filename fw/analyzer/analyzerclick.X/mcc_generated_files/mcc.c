@@ -86,8 +86,13 @@
 #pragma config WRTAPP = OFF    // Application Block write protection bit->Application Block not write protected
 
 // CONFIG4H
+#if __DEBUG
+#pragma config WRTB = OFF    // Configuration Register Write Protection bit->Configuration registers (300000-30000Bh) not write-protected
+#pragma config WRTC = OFF    // Boot Block Write Protection bit->Boot Block (000000-0007FFh) not write-protected
+#else
 #pragma config WRTB = ON    // Configuration Register Write Protection bit->Configuration registers (300000-30000Bh) write-protected
 #pragma config WRTC = ON    // Boot Block Write Protection bit->Boot Block (000000-0007FFh) write-protected
+#endif
 #pragma config WRTD = OFF    // Data EEPROM Write Protection bit->Data EEPROM not write-protected
 #pragma config WRTSAF = OFF    // SAF Write protection bit->SAF not Write Protected
 #pragma config LVP = ON    // Low Voltage Programming Enable bit->Low voltage programming enabled. MCLR/VPP pin function is MCLR. MCLRE configuration bit is ignored
@@ -114,8 +119,8 @@ void SYSTEM_Initialize(void)
 
 void OSCILLATOR_Initialize(void)
 {
-    // NOSC EXTOSC   with 4x PLL; NDIV 1; 
-    OSCCON1 = 0x20;
+    // NOSC HFINTOSC; NDIV 1; 
+    OSCCON1 = 0x60;
     // CSWHOLD may proceed; SOSCPWR Low power; 
     OSCCON3 = 0x00;
     // MFOEN disabled; LFOEN disabled; ADOEN disabled; SOSCEN disabled; EXTOEN disabled; HFOEN disabled; 

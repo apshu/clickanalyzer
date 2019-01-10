@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#define XTERM_screenWidth               100
+#define XTERM_screenWidth               101
 #define XTERM_ToolbarHeight             3
 #define XTERM_userWindowHeight          32
 #define XTERM_promptRow                 2
@@ -21,7 +21,7 @@ extern "C" {
 #define XTERM_statusbarRow              3   //XTERM_ToolbarHeight
 #define XTERM_NAKrow                    3   //XTERM_statusbarRow
 #define XTERM_NAKleft                   87  //XTERM_screenWidth - 13
-#define XTERM_userWindowRight           100 //XTERM_screenWidth
+#define XTERM_userWindowRight           101 //XTERM_screenWidth
 #define XTERM_userWindowTopRow          4   //XTERM_ToolbarHeight + 1
 #define XTERM_userWindowBottomRow       35  //XTERM_userWindowHeight + XTERM_userWindowTopRow - 1
 #define XTERM_screenHeight              35  //(XTERM_userWindowHeight + XTERM_ToolbarHeight)
@@ -35,7 +35,7 @@ extern "C" {
 #define XTERM_ledGreenTopRow            3   //XTERM_statusbarRow
 #define XTERM_ledRedLeft                49  
 #define XTERM_ledRedTopRow              3   //XTERM_statusbarRow
-#define XTERM_helpIconLeft              96
+#define XTERM_helpIconLeft              97
 #define XTERM_helpIconTopRow            1
 #define XTERM_buttonYellowLeft          4  
 #define XTERM_buttonYellowRight         12  
@@ -58,13 +58,10 @@ extern "C" {
 #define XTERM_spinnerLeft               72  //XTERM_buttonAcquRight+2
 #define XTERM_spinnerTop                3   //XTERM_statusbarRow
 #define XTERM_LS_firstRow               (XTERM_userWindowTopRow + 2)
+#define XTERM_SCOPE_firstRow            (XTERM_userWindowTopRow + 5)
 #define XTERM_DVM_firstRow              (XTERM_userWindowTopRow + 2)
 #if defined( CIRCUITBOARD ) && ( CIRCUITBOARD > 0 )
-#if (CIRCUITBOARD == PCB_clickboard)
 #define XTERM_DVM_magnitudeLeft         15
-#else
-#define XTERM_DVM_magnitudeLeft         28
-#endif
 #else
 #error "Please define circuit board type and/or include hwresources.h"
 #endif                    

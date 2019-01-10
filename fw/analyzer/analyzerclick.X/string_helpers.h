@@ -14,6 +14,8 @@ extern "C" {
 
 char* strReplaceAllChar(char* str, char find, char replace);
 char* floatToEng(float number, char* renderBuf);
+char* getSerialnumberString(char* renderBuf);
+char* toBase26(const uint8_t *data, size_t numDataBytes, char* renderBuf);
 
 #ifdef	__cplusplus
 }

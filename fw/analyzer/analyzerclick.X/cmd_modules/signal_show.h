@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #define SSHOW_defaultOffDelayTicks() (200)  /* Monostable period */
+#define SSHOW_pinIsAnalog (100)    
     
     bool SSHOW_onCommand(const char* cmdLine);
     void SSHOW_onTick(void);

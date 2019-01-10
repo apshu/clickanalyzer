@@ -15,6 +15,7 @@ extern "C" {
     typedef struct {
         char portName;
         uint8_t portBit;
+        uint8_t isAnalog;
     } PINS_pindef_t;
 
     typedef enum {
@@ -34,6 +35,8 @@ extern "C" {
     void PINS_setPinModeAnalog(PINS_pindef_t *thePin, bool isAnalog);
     bool PINS_pinToADC(PINS_pindef_t *thePin);
     float PINS_measureVref(void);
+    void PINS_setAllPinsAnalog(bool isAnalog);
+    bool PINS_isPinAnalog(PINS_pindef_t *thePin);
     
 #ifdef	__cplusplus
 }

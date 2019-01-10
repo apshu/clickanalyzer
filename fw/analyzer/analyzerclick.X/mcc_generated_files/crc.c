@@ -110,8 +110,8 @@ void CRC_Initialize(void)
     CRCACCH = seed >> 8;
     CRCACCL = seed;
 
-    crcObj.dataWidth = CRCCON1bits.DLEN + 1;
-    crcObj.polyWidth = CRCCON1bits.PLEN + 1;
+    crcObj.dataWidth = CRCCON1bits.DLEN + 1U;
+    crcObj.polyWidth = CRCCON1bits.PLEN + 1U;
 }
 
 void CRC_Start(void)
@@ -178,13 +178,13 @@ uint16_t CRC_CalculatedResultGet(bool reverse, uint16_t xorValue)
      PIR0bits.CRCIF = 0;
      
      CRCCON0bits.CRCGO = 0;
-     CRCCON1bits.DLEN = crcObj.dataWidth - 1;
+     CRCCON1bits.DLEN = crcObj.dataWidth - 1U;
      // Read result
      result = ((uint16_t)CRCACCH << 8)|CRCACCL;
      if(crcObj.polyWidth < 16)
      {
        // Polynomial mask   
-        mask = (1 << crcObj.polyWidth) - 1;
+        mask = (unsigned)((1 << crcObj.polyWidth) - 1);
         result &= mask;
      }
 
@@ -243,7 +243,7 @@ bool CRC_SCAN_IsScannerBusy(void)
 bool CRC_SCAN_HasScanCompleted(void)
 {
     // Has scanning completed?
-    bool status = PIR0bits.SCANIF && PIR0bits.CRCIF;
+    bool status = (bool)(PIR0bits.SCANIF && PIR0bits.CRCIF);
     if(status)
     {
         PIR0bits.CRCIF = 0;

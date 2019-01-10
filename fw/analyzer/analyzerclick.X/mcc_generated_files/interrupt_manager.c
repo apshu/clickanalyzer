@@ -51,7 +51,7 @@
 void INTERRUPT_Initialize(void) {
     INTCON0bits.IPEN = 1;
 
-    bool state = GIE;
+    bool state = (bool)GIE;
     GIE = 0;
     IVTLOCK = 0x55;
     IVTLOCK = 0xAA;

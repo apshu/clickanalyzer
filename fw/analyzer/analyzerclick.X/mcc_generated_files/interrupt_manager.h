@@ -48,7 +48,7 @@
 #ifndef INTERRUPT_MANAGER_H
 #define INTERRUPT_MANAGER_H
 
-#define IVT1_BASE_ADDRESS 0x2010
+#define IVT1_BASE_ADDRESS 0x2010UL
 
 /**
  * @Param

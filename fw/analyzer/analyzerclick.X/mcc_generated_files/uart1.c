@@ -113,17 +113,13 @@ void UART1_Initialize(void) {
     // TXPOL not inverted; FLO hardware; C0EN Checksum Mode 0; RXPOL not inverted; RUNOVF RX input shifter stops all activity; STP Transmit 1Stop bit, receiver verifies first Stop bit; 
     U1CON2 = 0x02;
 #if defined( CIRCUITBOARD ) && ( CIRCUITBOARD > 0 )
-#if (CIRCUITBOARD == PCB_gumstick_alt_UART) || (CIRCUITBOARD == PCB_clickboard)
+#if (CIRCUITBOARD == PCB_clickboard)
     /* 500000 */
     // BRGL 31; 
     U1BRGL = 0x1F;
 
     // BRGH 0; 
     U1BRGH = 0x00;
-#elif (CIRCUITBOARD == PCB_gumstick)
-    /* 57600 */
-    U1BRGL = 0x15;
-    U1BRGH = 0x01;
 #else
 #error "Unknown board type"
 #endif
@@ -164,7 +160,7 @@ uint8_t UART1_Read(void) {
 }
 
 bool UART1_isNewChar(void) {
-    return (uart1RxHead != uart1RxTail);
+    return (bool)(uart1RxHead != uart1RxTail);
 }
 
 void UART1_Write(uint8_t txData) {
@@ -177,7 +173,7 @@ void UART1_Write(uint8_t txData) {
 void __interrupt(irq(IRQ_U1RX), base(IVT1_BASE_ADDRESS), low_priority) UART1_Receive_ISR() {
     // add your UART1 interrupt custom code
     uart1RxBuffer[uart1RxHead] = U1RXB;
-    uint8_t newRxhead = uart1RxHead + 1;
+    uint8_t newRxhead = uart1RxHead + 1U;
     if (sizeof (uart1RxBuffer) <= newRxhead) {
         newRxhead = 0;
     }

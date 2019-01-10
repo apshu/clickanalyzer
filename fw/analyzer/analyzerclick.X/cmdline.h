@@ -37,6 +37,7 @@ typedef enum {
         CMD_payload_is_LOGIC_SCOPE = 'L' | ('S' << 8),
         CMD_payload_is_GET_RESPONSE = 'G' | ('T' << 8),
         CMD_payload_is_DIGITAL_VOLTMETER = 'D' | ('V' << 8),
+        CMD_payload_is_ANALOG_SCOPE = 'A' | ('S' << 8),
         CMD_payload_is_NAK = CMD_char_NAK | (CMD_char_NAK << 8),
     } CMD_payloadTypes_t;
     

@@ -10,6 +10,7 @@
 
 #include "cmd_modules/reset_all.h"
 #include "cmd_modules/logic_scope.h"
+#include "cmd_modules/scope.h"
 #include "cmd_modules/generic_settings.h"
 #include "cmd_modules/signal_show.h"
 #include "cmd_modules/dvm.h"
@@ -38,6 +39,7 @@ static void TS_initialize(void) {
 static const TS_onCommandFunc commandHandlers[] = {
     RST_onCommand,
     LS_onCommand,
+    SCOPE_onCommand,
     DVM_onCommand,
     CMDGET_onCommand,
     CMDSET_onCommand,

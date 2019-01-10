@@ -41,28 +41,11 @@ static uint8_t* DVM_outputBuf;
 static bit DVM_firstAcquisition;
 static uint8_t DVM_ticks;
 
-static void DVM_setAllPinsAnalog(bool isAnalog) {
-    int thePinNum = PINS_getNumPins();
-    for (; thePinNum; --thePinNum) {
-        PINS_setPinModeAnalog(PINS_pinnumToPinDef(thePinNum), isAnalog);
-    }
-}
-
 static char* DVM_strinsert_channelNumeric(char* renderBuf, uint8_t pinNum, uint16_t adcRaw) {
-    PINS_pindef_t* thePin = PINS_pinnumToPinDef(pinNum);
     float analogValue = adcRaw * DVM_samplingBuf->vrefVoltage / 4095.0;
-    sprintf(renderBuf, ANSI_CSI "%dH" ANSI_SETCOLOR("0;30;1")
-#if  defined(CIRCUITBOARD) && (CIRCUITBOARD > 0) && ((CIRCUITBOARD == PCB_gumstick) || (CIRCUITBOARD == PCB_gumstick_alt_UART))
-            "Analog pin %-2d (R%c%d)"
-#else
-            "Pin %-2d"
-#endif
-            ANSI_SETCOLOR("37") " %#.3fV",
+    sprintf(renderBuf, ANSI_CSI "%dH" ANSI_SETCOLOR("0;30;1") "Pin %-2d" ANSI_SETCOLOR("37") " %#.3fV",
             ((pinNum - 1) << 1) + XTERM_DVM_firstRow,
             pinNum,
-#if  defined(CIRCUITBOARD) && (CIRCUITBOARD > 0) && ((CIRCUITBOARD == PCB_gumstick) || (CIRCUITBOARD == PCB_gumstick_alt_UART))
-            thePin->portName, thePin->portBit,
-#endif
             analogValue
             );
     renderBuf = renderBuf + strlen(renderBuf);
@@ -94,7 +77,7 @@ static void DVM_task(void) {
             DVM_outputBuf = NULL;
             DVM_samplingBuf = (DVM_samplingBuf_t*) GLOBAL_claimSamplingBuffer();
             if (DVM_samplingBuf) {
-                DVM_setAllPinsAnalog(true);
+                PINS_setAllPinsAnalog(true);
                 GLOBAL_setSampleBufByteSize(sizeof (DVM_samplingBuf_t) + (PINS_getNumPins() - 1) * sizeof (DVM_samplingBuf->analogPinRaw[0]));
                 DVM_samplingBuf->vrefVoltage = PINS_measureVref();
                 DVM_samplingBuf->ADCbits = 12;
@@ -106,7 +89,7 @@ static void DVM_task(void) {
         case DVM_selectNextChannel:
             if (DVM_samplingBuf->numChannels < PINS_getNumPins()) {
                 /* assign ADC to the channel */
-                if (PINS_pinToADC(PINS_pinnumToPinDef(DVM_samplingBuf->numChannels + 1))) {
+                if (PINS_pinToADC(PINS_pinnumToPinDef(DVM_samplingBuf->numChannels + 1U))) {
                     // Turn on the ADC module
                     ADCON0bits.ADON = 1;
                     // Start the conversion
@@ -120,7 +103,7 @@ static void DVM_task(void) {
 
         case DVM_waitConvertDone:
             if (!ADCON0bits.ADGO) {
-                DVM_samplingBuf->analogPinRaw[DVM_samplingBuf->numChannels++] = ((ADRESH << 8) + ADRESL);
+                DVM_samplingBuf->analogPinRaw[DVM_samplingBuf->numChannels++] = (unsigned)((ADRESH << 8) + ADRESL);
                 DVM_state = DVM_selectNextChannel;
             }
             break;
@@ -130,7 +113,7 @@ static void DVM_task(void) {
                 *DVM_outputBuf = 0; /* If buffer used for text, make sure it's empty... */
                 if (DVM_samplingBuf->numChannels == PINS_getNumPins()) {
                     /* First run */
-                    DVM_outputBuf = XTERM_strinsert_clientWindowPreamble(DVM_outputBuf, DVM_firstAcquisition);
+                    DVM_outputBuf = XTERM_strinsert_clientWindowPreamble(DVM_outputBuf, (bool)DVM_firstAcquisition);
                     DVM_outputBuf = XTERM_strinsert_spinner(DVM_outputBuf);
                     if (DVM_firstAcquisition) {
                         /* First time first run */
@@ -140,16 +123,16 @@ static void DVM_task(void) {
                 if (DVM_ticks >= DVM_ANALOG_CHANGE_TICKS) {
                     /* Time to update the decimal value */
                     DVM_ticks -= DVM_ANALOG_CHANGE_TICKS;
-                    sprintf(DVM_outputBuf, ANSI_SETCOLOR("0") ANSI_SETCURSOR(XTERM_userWindowLeft, XTERM_userWindowTopRow) "Analog reference voltage " ANSI_SETCOLOR("1;35") "%.3fV" ANSI_SETCOLOR("0"), DVM_samplingBuf->vrefVoltage);
+                    sprintf(DVM_outputBuf, ANSI_SETCOLOR("0") ANSI_SETCURSOR(XTERM_userWindowLeft, XTERM_userWindowTopRow) "Analyzer USB voltage is " ANSI_SETCOLOR("1;35") "%.3fV" ANSI_SETCOLOR("0"), DVM_samplingBuf->vrefVoltage);
                     DVM_outputBuf = DVM_outputBuf + strlen(DVM_outputBuf);
                     uint8_t pinIter;
                     for (pinIter = 0; pinIter < PINS_getNumPins(); ++pinIter) {
-                        DVM_outputBuf = DVM_strinsert_channelNumeric(DVM_outputBuf, pinIter + 1, DVM_samplingBuf->analogPinRaw[pinIter]);
+                        DVM_outputBuf = DVM_strinsert_channelNumeric(DVM_outputBuf, pinIter + 1U, DVM_samplingBuf->analogPinRaw[pinIter]);
                     }
                     DVM_state = DVM_sendCmdBuffer;
                 }
                 uint8_t pinNum = PINS_getNumPins() - DVM_samplingBuf->numChannels; /* pinNum adjusted for array access */
-                DVM_outputBuf = DVM_strinsert_channelBar(DVM_outputBuf, pinNum + 1, DVM_samplingBuf->analogPinRaw[pinNum]);
+                DVM_outputBuf = DVM_strinsert_channelBar(DVM_outputBuf, pinNum + 1U, DVM_samplingBuf->analogPinRaw[pinNum]);
                 if (!--DVM_samplingBuf->numChannels || (strlen(CMD_getOutputBufferAddress()) > (CMD_getOutputBufferSize() - 300))) {
                     /* Send if no more channels to render or output buffer near capacity */
                     DVM_state = DVM_sendCmdBuffer;
@@ -237,7 +220,7 @@ static void DVM_task(void) {
 
 static void DVM_onExit(void) {
     DVM_state = DVM_idle;
-    DVM_setAllPinsAnalog(false);
+    PINS_setAllPinsAnalog(false);
     TS_setOnTickFunc(NULL);
     TS_setTaskFunc(NULL);
     TS_setOnTickFunc(NULL);

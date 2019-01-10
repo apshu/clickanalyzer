@@ -8,12 +8,17 @@
 #include "../cmdline.h"
 #include "generic_settings.h"
 #include "logic_scope.h"
+#include "scope.h"
 #include "../global_settings.h"
 #include "../string_helpers.h"
 #include "../xterm.h"
 
 /* Disable warning: (336) string concatenation across lines */
 #pragma warning disable 336
+
+#define VERSION_HW      "1.0"
+#define VERSION_FW      "2.00"
+#define VERSION_COMM    "1.10"
 
 static uint8_t* CMDGET_outBuf = NULL;
 static const char CMDGET_led_options[] = {
@@ -62,6 +67,7 @@ bool CMDGET_onCommand(const char* cmdLine) {
                     "\"COMMANDS\":{\"details\":\"GET$COMMANDS_INFO\"},"
                     "\"GOTOBOOTLOADER\":{\"details\":\"GET$BLDR_INFO\"},"
                     "\"LS\":{\"details\":\"GET$LS_INFO\"},"
+                    "\"SCOPE\":{\"details\":\"GET$SCOPE_INFO\"},"
                     "\"LED\":{\"details\":\"GET$LED_INFO\"},"
                     "\"DVM\":{\"details\":\"GET$DVM_INFO\"},"
                     "\"GET\":{\"details\":\"GET$GET_INFO\"},"
@@ -102,13 +108,16 @@ bool CMDGET_onCommand(const char* cmdLine) {
                     strcpy(CMDGET_replyBuf,
                             "{"
                             "\"product\":{"
-                            "\"name\":\"PIC18F26K42 click'o'lyzer\","
+                            "\"name\":\"PIC18F26K42 Click Analyzer\","
                             "\"version\":{"
-                            "\"HW\":\"1.0\","
-                            "\"FW\":\"1.0\","
-                            "\"COMM\":\"1.05\""
-                            "}"
-                            "}"
+                            "\"HW\":\"" VERSION_HW "\","
+                            "\"FW\":\"" VERSION_FW "\","
+                            "\"COMM\":\"" VERSION_COMM "\"},"
+                            "\"serialID\":\""
+                            );
+                    getSerialnumberString(CMDGET_replyBuf + strlen(CMDGET_replyBuf));
+                    strcat(CMDGET_replyBuf,
+                            "\"}"
                             "}"
                             );
                 }
@@ -137,6 +146,44 @@ bool CMDGET_onCommand(const char* cmdLine) {
                             LS_getMaxNumberOfSamples(),
                             LS_getMaxNumberOfSamples(),
                             CMDGET_NCO1_options);
+                }
+                if (!strcmp(parName, "SCOPE_INFO")) {
+                    sprintf(CMDGET_replyBuf,
+                            "{"
+                            "\"commands\":{"
+                            "\"SCOPE\":{"
+                            "\"description\":\"Analog scope\","
+                            "\"maxResolutionBits\":12,"
+                            "\"bytesPerSample\":%d,"
+                            "\"parameters\":{"
+                            "\"NUMSMP\":{"
+                            "\"type\":\"numSamples\","
+                            "\"optional\":false,"
+                            "\"values\":{"
+                            "\"range\":[1,%d,1,%d]"
+                            "}"
+                            "},"
+                            "\"PIN\":{"
+                            "\"type\":\"analog\","
+                            "\"optional\":false,"
+                            "\"values\":{"
+                            "\"range\":[1,14,1,14]"
+                            "}"
+                            "},"
+                            "\"FREQ\":{"
+                            "\"type\":\"samplerate\","
+                            "\"optional\":false,"
+                            "\"values\":{"
+                            "\"range\":[61,66667,61,66667]"
+                            "}"
+                            "}"
+                            "}"
+                            "}"
+                            "}"
+                            "}",
+                            sizeof (((LS_payloadBuf_t*) 0)->dataRecords[0]),
+                            SCOPE_getMaxNumberOfSamples(),
+                            SCOPE_getMaxNumberOfSamples());
                 }
                 if (!strcmp(parName, "LED_INFO")) {
                     sprintf(CMDGET_replyBuf,
@@ -168,11 +215,11 @@ bool CMDGET_onCommand(const char* cmdLine) {
                             "\"parameters\":{"
                             "\"PRODUCT\":%s,"
                             "\"COMMANDS_INFO\":%s,"
-                            "\"STOP_INFO\":%s,"
                             "\"GET_INFO\":%s,"
                             "\"SET_INFO\":%s,"
                             "\"LED_INFO\":%s,"
-                            "\"LS_INFO\":%s"
+                            "\"LS_INFO\":%s,"
+                            "\"SCOPE_INFO\":%s"
                             "}"
                             "}"
                             "}"

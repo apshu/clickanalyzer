@@ -9,11 +9,11 @@
 
 static void inline RST_executeDeviceReset(void) {
     GIE = 0;
-    Reset();
+    abort();
     while (1) continue; /* Wait watchdog reset */
 }
 
-/* returns true if new char may not go into the queue */
+/* returns true if new char may go into the queue */
 bool RST_onNewChar(char newChar) {
     if (RST_cmd_rebootDevice == newChar) { /* If reset char anywhere in the command, do reset */
         RST_executeDeviceReset();

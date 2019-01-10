@@ -31,17 +31,14 @@ static enum {
 static char* SSHOW_strinsert_LEDstatus(char* renderBuf, const char* name, PINS_pindef_t *inPin) {
     if (name) {
         if (inPin) {
-#if defined(CIRCUITBOARD) && (CIRCUITBOARD > 0) && ((CIRCUITBOARD == PCB_gumstick) || (CIRCUITBOARD == PCB_gumstick_alt_UART))
-            sprintf(renderBuf, "%s" ANSI_SETCOLOR("0") " Signal LED assigned to pin %d (R%c%d)",
+            if (PINS_isPinAnalog(inPin)) {
+                sprintf(renderBuf, "%s" ANSI_SETCOLOR("0") " Signal LED assigned to pin %d is blank due to pin used by ADC",
                     name,
-                    PINS_pinDefToPinNum(inPin),
-                    inPin->portName,
-                    inPin->portBit);
-#else
+                        PINS_pinDefToPinNum(inPin));
+            }
             sprintf(renderBuf, "%s" ANSI_SETCOLOR("0") " Signal LED assigned to pin %d",
                     name,
                     PINS_pinDefToPinNum(inPin));
-#endif
         } else {
             sprintf(renderBuf, "%s" ANSI_SETCOLOR("0") " Signal LED not assigned to signal change monitoring", name);
         }
@@ -151,7 +148,7 @@ bool SSHOW_onCommand(const char* cmdLine) {
                         }
                     }
                 }
-                SSHOW_LEDs[thePin].inPin = PINS_pinnumToPinDef(parValue);
+                SSHOW_LEDs[thePin].inPin = PINS_pinnumToPinDef((unsigned) parValue);
                 SSHOW_LEDs[thePin].activityCtr = 0;
                 SSHOW_LEDs[thePin].offDelayTicks = SSHOW_defaultOffDelayTicks();
             }
@@ -159,6 +156,7 @@ bool SSHOW_onCommand(const char* cmdLine) {
         if ((status & (optionalParams | mandatoryParams)) >= mandatoryParams) { /* all parameters are optional */
             /* Command processed successfully */
             SSHOW_state = SSHOW_waitTxBufferReady;
+            TS_setExitFunc(NULL);
             TS_setTaskFunc(SSHOW_task);
             return true;
         }
@@ -196,6 +194,9 @@ void SSHOW_onTick(void) {
 
 uint8_t SSHOW_getInputPinForLED(PINS_output_t outPin) {
     if (outPin < (sizeof (SSHOW_LEDs) / sizeof (SSHOW_LEDs[0]))) {
+        if (PINS_isPinAnalog(SSHOW_LEDs[outPin].inPin)) {
+            return SSHOW_pinIsAnalog;
+        }
         return PINS_pinDefToPinNum(SSHOW_LEDs[outPin].inPin);
     }
     return 0;
@@ -242,10 +243,10 @@ void SSHOW_onMouse(uint16_t mouseX, uint16_t mouseY, uint16_t mouseEvent) {
                     if (newPin < 0) {
                         newPin = PINS_getNumPins();
                     }
-                    if (newPin > PINS_getNumPins()) {
+                    if (newPin > (int) PINS_getNumPins()) {
                         newPin = 0;
                     }
-                    SSHOW_LEDs[thePin].inPin = PINS_pinnumToPinDef(newPin);
+                    SSHOW_LEDs[thePin].inPin = PINS_pinnumToPinDef((unsigned) newPin);
                     PINS_isDigitalInputChanged(SSHOW_LEDs[thePin].inPin); /* Clear detected edges */
                     SSHOW_LEDs[thePin].activityCtr = 0;
                     SSHOW_LEDs[thePin].offDelayTicks = SSHOW_defaultOffDelayTicks();
